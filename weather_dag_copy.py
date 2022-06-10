@@ -1,11 +1,13 @@
+# Copy of actual dag in /dags - just for reference in github.
+
 from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from airflow.operators.empty import EmptyOperator
 from airflow.utils.dates import days_ago
 import sys
-sys.path.append('/mnt/c/users/me/synologyDrive/Learning/weather_forecast_analysis')
-from observations import get_observations, test_observations
+from weather_forecast_analysis.observations import get_observations
+from weather_forecast_analysis.forecasts import get_forecasts
 
 
 default_args = {
@@ -28,17 +30,19 @@ dag = DAG(
 
 start = EmptyOperator(task_id='start',dag=dag)
 
-test_observations = PythonOperator(
-    task_id='test_observations',
-    python_callable=test_observations,
-    dag=dag,
-)
-
 get_observations = PythonOperator(
     task_id='get_observations',
     python_callable=get_observations,
     dag=dag,
 )
+
+get_forecasts = PythonOperator(
+    task_id='get_forecasts',
+    python_callable=get_forecasts,
+    dag=dag,
+)
 end = EmptyOperator(task_id='end',dag=dag)
 
-start >> test_observations >> get_observations >> end
+# define dag flow order of operations
+
+start >> get_observations >> get_forecasts >> end
