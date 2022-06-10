@@ -1,27 +1,17 @@
 import json
 import requests
 import pandas as pd
-import datetime
 from google.cloud import bigquery as bq
-client = bq.Client.from_service_account_json("dags/weather_forecast_analysis/gcp-service-acct.json")
+
 
 
 def get_forecasts():
-    table_id = 'lofty-dynamics-283618.weather.forecast_raw'
-
 
     ## see https://www.weather.gov/documentation/services-web-api#/default/gridpoint_forecast for fine tuning these.
     response_api  = requests.get('https://api.weather.gov/gridpoints/SEW/130,123/forecast')
     data = response_api.text
     data = json.loads(data)
     data = data['properties']
-
-
-    # for testing only - dummy response data for troubleshooting
-    #with open('dags/weather_forecast_analysis/sample-forecast-response.json','r') as file:
-        #data = json.load(file)
-        #data = data['properties']
-        
 
     # Captures timestamp of forecast collection time, and the temps for the first four entries in the forecast (today, tonight, tomorrow)
     generated = data['generatedAt']
@@ -32,7 +22,7 @@ def get_forecasts():
     tomorrow_temp = data['periods'][2]['temperature']
     tomorrow_night_temp = data['periods'][3]['temperature']
 
-
+    
     rows = [
         {"collected": generated, 
         "temp_today": today_temp, 
@@ -42,6 +32,9 @@ def get_forecasts():
     ]
 
     #Insert to BQ table
+    client = bq.Client.from_service_account_json("dags/weather_forecast_analysis/gcp-service-acct.json")
+    table_id = 'lofty-dynamics-283618.weather.forecast_raw'
+
 
     errors = client.insert_rows_json(table_id, rows)  # Make an API request.
     if errors == []:
@@ -49,3 +42,5 @@ def get_forecasts():
     else:
         print("Encountered errors while inserting rows: {}".format(errors))
 
+
+get_forecasts()
