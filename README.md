@@ -1,11 +1,10 @@
 # weather_forecast_analysis
-Practice building a full data pipeline for comparing weather forecast vs reality. 
+This is a practice project in building a full data pipeline for comparing weather forecast vs reality. 
 
-## Plan
-Set up workflows (Airflow or similar) to every day:
-1. Retrieve from the NWS weather forecast for a given lat/lon
-2. Retrieve the previous day's observations
-3. Parse and cleanse resulting data into structured data frames
-4. Append each day's results to an incremental dataset in Google Big Query
-5. Build models to contruct tables that compare forecast vs reality over time across a variety of metrics - conditions, temperature, visibility, etc.
-6. Analyze and construct live visualizations that present findings once enough data has accumulated.
+Included are separate python scripts for retrieving weather data from the national weather service API, and then inserting that data as new rows in biquery dataset.
+
+Additionally, there are scripts for initializing new bigquery tables and updating them
+
+Finally there are  two versions of airflow DAGs, one for use in a locally run Airflow instance, and one that is compatible with GCP's cloud composer.
+
+All of this is just a proof of concept that has been tested as working in both local & cloud environments, but as of this last update, no workflows are actively collecting any new data.
