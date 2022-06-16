@@ -89,7 +89,7 @@ dag = DAG(
     'weather_dag',
     description='retrieve weather results',
     schedule_interval=timedelta(days=1),
-    start_date=datetime(2022,6,16,7,00,00),
+    start_date=datetime(2022,6,17,7,5,00),
     catchup=False
 )
 

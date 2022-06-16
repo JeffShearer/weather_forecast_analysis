@@ -1,7 +1,7 @@
+# version of forecasts.py with offline data pull for easier troubleshooting
+
 import json
-import requests
-
-
+from google.cloud import bigquery as bq
 
 
 def get_forecasts():
@@ -10,39 +10,29 @@ def get_forecasts():
     data = json.load(open(path, "r"))
     data = data['properties']
     generated = data['generatedAt']
-    forecasts = data['periods']
-
-    forecast_list = []
-    d = {}
-    count = 0
+    #Retrieve just the forecasts for today - tomorrow night
+    forecasts = data['periods'][:4]
 
     for forecast in forecasts:
-        revised = {key: forecast[key] for key in  forecast.keys() & {'number','startTime','endTime','temperature','shortForecast'}}
-        forecast_list.append(revised)
+        #appends forecast generation timestamp to every row
+        forecast["generated"] = generated
 
-    print(forecast_list)
-
-
-
-
-    #generated = data['generatedAt']
-    # strips timezone so as not to piss off BQ
-    #generated = generated[:generated.find('+')]
-    #today_temp = data['periods'][0]['temperature']
-    #tonight_temp = data['periods'][1]['temperature']
-    #tomorrow_temp = data['periods'][2]['temperature']
-    #tomorrow_night_temp = data['periods'][3]['temperature']
+        # for future reference - this code will filter down the k-v pairs to a select few. 
+        #revised = {key: forecast[key] for key in  forecast.keys() & {'number','startTime','endTime','temperature','shortForecast'}}
+        #forecast_list.append(revised)
 
     
-    #row = [
-       # {"collected": generated, 
-        #"temp_today": today_temp, 
-        #"temp_tonight": tonight_temp,
-        #"temp_tomorrow": tomorrow_temp,  
-        #"temp_tomorrow_night": tomorrow_night_temp}
-    #]
+    # big query append
+    client = bq.Client.from_service_account_json("gcp-service-acct.json")
+    table_id = 'lofty-dynamics-283618.weather.forecast_granular_raw'
 
-    #return data
+
+    errors = client.insert_rows_json(table_id, forecasts)  # Make an API request.
+    if errors == []:
+        print("New rows have been added.")
+    else:
+        print("Encountered errors while inserting rows: {}".format(errors))
+
 
 
 get_forecasts()
